@@ -33,6 +33,33 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingTop="16dp"
+            android:text="Weckton"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvTon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp" />
+
+        <Button
+            android:id="@+id/btnTon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Weckton wählen" />
+
+        <Switch
+            android:id="@+id/swVibration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Vibration beim Wecken" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
             android:text="MQTT-Server (nur im Heimnetz)"
             android:textStyle="bold" />
 

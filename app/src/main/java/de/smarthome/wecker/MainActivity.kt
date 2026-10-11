@@ -6,6 +6,7 @@ import android.app.AlarmManager
 import android.app.NotificationManager
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +15,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import java.text.SimpleDateFormat
@@ -22,6 +24,10 @@ import java.util.Locale
 
 class MainActivity : Activity() {
 
+    companion object {
+        private const val RC_TON = 7
+    }
+
     private lateinit var tvStatus: TextView
     private lateinit var tvRechte: TextView
     private lateinit var etHost: EditText
@@ -29,6 +35,8 @@ class MainActivity : Activity() {
     private lateinit var etTopic: EditText
     private lateinit var etUser: EditText
     private lateinit var etPass: EditText
+    private lateinit var tvTon: TextView
+    private lateinit var swVibration: Switch
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,6 +50,8 @@ class MainActivity : Activity() {
         etTopic = findViewById(R.id.etTopic)
         etUser = findViewById(R.id.etUser)
         etPass = findViewById(R.id.etPass)
+        tvTon = findViewById(R.id.tvTon)
+        swVibration = findViewById(R.id.swVibration)
 
         val p = Prefs(this)
         etHost.setText(p.host)
@@ -71,11 +81,43 @@ class MainActivity : Activity() {
 
         findViewById<Button>(R.id.btnRechte).setOnClickListener { rechteEinrichten() }
 
+        findViewById<Button>(R.id.btnTon).setOnClickListener {
+            val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, "Weckton wählen")
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                .putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Benachrichtigung.ton(this))
+            startActivityForResult(intent, RC_TON)
+        }
+
+        swVibration.isChecked = p.vibration
+        swVibration.setOnCheckedChangeListener { _, an ->
+            if (Prefs(this).vibration != an) {
+                Prefs(this).vibration = an
+                Benachrichtigung.einstellungenGeaendert(this)
+            }
+        }
+
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
             requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != RC_TON || resultCode != RESULT_OK || data == null) return
+        @Suppress("DEPRECATION")
+        val uri: Uri? = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+        val neu = uri?.toString() ?: ""
+        val p = Prefs(this)
+        if (neu != p.tonUri) {
+            p.tonUri = neu
+            Benachrichtigung.einstellungenGeaendert(this)
+        }
+        aktualisieren()
     }
 
     override fun onResume() {
@@ -92,6 +134,8 @@ class MainActivity : Activity() {
             append(if (p.letzterAbruf > 0) fmt.format(Date(p.letzterAbruf)) else "noch nie").append("\n")
             if (p.status.isNotBlank()) append("Status: ").append(p.status)
         }
+
+        tvTon.text = "Weckton: " + Benachrichtigung.tonName(this)
 
         val fehlend = fehlendeRechte()
         tvRechte.text = if (fehlend.isEmpty()) {

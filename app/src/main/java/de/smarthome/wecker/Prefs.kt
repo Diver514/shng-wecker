@@ -46,4 +46,18 @@ class Prefs(context: Context) {
     var letzterWlanTrigger: Long
         get() = sp.getLong("letzterWlanTrigger", 0L)
         set(v) = sp.edit().putLong("letzterWlanTrigger", v).apply()
+
+    /** Gewählter Weckton (Content-URI), leer = Standard-Weckton des Systems. */
+    var tonUri: String
+        get() = sp.getString("tonUri", "") ?: ""
+        set(v) = sp.edit().putString("tonUri", v).apply()
+
+    var vibration: Boolean
+        get() = sp.getBoolean("vibration", false)
+        set(v) = sp.edit().putBoolean("vibration", v).apply()
+
+    /** Kanal-Version: Android erlaubt keine Änderung von Ton/Vibration an bestehenden Kanälen. */
+    var kanalVersion: Int
+        get() = sp.getInt("kanalVersion", 2)
+        set(v) = sp.edit().putInt("kanalVersion", v).apply()
 }

@@ -9,12 +9,13 @@ import android.content.Intent
 import android.graphics.drawable.Icon
 import android.media.AudioAttributes
 import android.media.RingtoneManager
+import android.net.Uri
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 object Benachrichtigung {
-    const val KANAL_WECKER = "wecker_v1"
+    private const val KANAL_PREFIX = "wecker_"
     const val KANAL_INFO = "hinweise_v1"
     private const val ID_KLINGELN = 1
     private const val ID_WARNUNG = 2
@@ -22,20 +23,33 @@ object Benachrichtigung {
     const val ACTION_STOPP = "de.smarthome.wecker.STOPP"
     const val ACTION_SCHLUMMERN = "de.smarthome.wecker.SCHLUMMERN"
 
+    fun kanalWecker(ctx: Context): String = KANAL_PREFIX + Prefs(ctx).kanalVersion
+
     fun kanaeleAnlegen(ctx: Context) {
         val nm = ctx.getSystemService(NotificationManager::class.java)
+        val p = Prefs(ctx)
+        val aktuell = kanalWecker(ctx)
+
+        // Alte Wecker-Kanäle (andere Ton-/Vibrationseinstellung) entfernen
+        for (k in nm.notificationChannels) {
+            if (k.id.startsWith(KANAL_PREFIX) && k.id != aktuell) nm.deleteNotificationChannel(k.id)
+        }
+
         val attrs = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
-        val ton = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
 
-        val wecker = NotificationChannel(KANAL_WECKER, "Wecker", NotificationManager.IMPORTANCE_HIGH).apply {
+        val wecker = NotificationChannel(aktuell, "Wecker", NotificationManager.IMPORTANCE_HIGH).apply {
             description = "Klingeln des Weckers"
-            setSound(ton, attrs)
-            enableVibration(true)
-            vibrationPattern = longArrayOf(0, 800, 600, 800, 600)
+            setSound(ton(ctx), attrs)
+            if (p.vibration) {
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 800, 600, 800, 600)
+            } else {
+                enableVibration(false)
+                vibrationPattern = longArrayOf(0)
+            }
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             setBypassDnd(true)
         }
@@ -44,6 +58,27 @@ object Benachrichtigung {
         }
         nm.createNotificationChannels(listOf(wecker, info))
     }
+
+    /** Ton oder Vibration geändert: neuen Kanal mit neuer ID anlegen. */
+    fun einstellungenGeaendert(ctx: Context) {
+        val p = Prefs(ctx)
+        p.kanalVersion = p.kanalVersion + 1
+        kanaeleAnlegen(ctx)
+    }
+
+    fun ton(ctx: Context): Uri {
+        val gewaehlt = Prefs(ctx).tonUri
+        if (gewaehlt.isNotBlank()) return Uri.parse(gewaehlt)
+        return RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+    }
+
+    fun tonName(ctx: Context): String =
+        try {
+            RingtoneManager.getRingtone(ctx, ton(ctx))?.getTitle(ctx) ?: "Standard-Weckton"
+        } catch (e: Exception) {
+            "Standard-Weckton"
+        }
 
     /** Klingeln: Vollbild + Alarmton in Dauerschleife (FLAG_INSISTENT), max. 10 Minuten. */
     fun klingeln(ctx: Context) {
@@ -57,7 +92,7 @@ object Benachrichtigung {
         val icon = Icon.createWithResource(ctx, android.R.drawable.ic_lock_idle_alarm)
         val uhrzeit = SimpleDateFormat("HH:mm", Locale.GERMANY).format(Date())
 
-        val n = Notification.Builder(ctx, KANAL_WECKER)
+        val n = Notification.Builder(ctx, kanalWecker(ctx))
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setContentTitle("Wecker")
             .setContentText("Es ist $uhrzeit Uhr")
