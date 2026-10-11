@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:paddingBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvRechte"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:paddingBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnRechte"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Berechtigungen einrichten" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:text="MQTT-Server (nur im Heimnetz)"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/etHost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Server-IP, z. B. 192.168.1.10"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etPort"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Port (1883)"
+            android:inputType="number" />
+
+        <EditText
+            android:id="@+id/etTopic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Topic"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etUser"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Benutzer (optional)"
+            android:inputType="text" />
+
+        <EditText
+            android:id="@+id/etPass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Passwort (optional)"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/btnSpeichern"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Speichern und jetzt abrufen" />
+
+        <Button
+            android:id="@+id/btnTest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Testalarm in 1 Minute" />
+    </LinearLayout>
+</ScrollView>
